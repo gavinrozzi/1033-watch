@@ -81,7 +81,6 @@ renderValueBox({
 Row
 -----------------------------------------------------------------------
 
-### State Data
 ```{r}
 DT::renderDataTable({
   DT::datatable(data1033 %>% filter(State == input$state) %>% arrange(desc(`Ship Date`)) %>% select(-State, -`Station Type`), extensions = 'Responsive', escape = FALSE, rownames = FALSE,
