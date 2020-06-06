@@ -1,0 +1,92 @@
+---
+title: "1033 Watch"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: spacelab
+    orientation: rows
+    source_code: "https://github.com/gavinrozzi/1033-watch"
+    vertical_layout: fill
+runtime: shiny
+
+---
+```{r global, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(shiny)
+library(plotly)
+library(formattable)
+library(DT)
+
+# Read in 1033 program data
+data1033 <- read_csv('data/data.csv') %>% select(-X1)
+
+# Get state names
+state_data <- data.frame(state.name, state.abb)
+
+```
+
+Home
+=====================================
+
+About Your State {.sidebar}
+-----------------------------------------------------------------------
+The [1033 program](https://www.dla.mil/DispositionServices/Offers/Reutilization/LawEnforcement/ProgramFAQs.aspx) is an initiative that allows the Department of Defense to provide excess military equipment to state & local law enforcement agencies.
+
+This dashboard is tracking how much each state has received under the program, and what type of equipment they received.
+  
+Select your state below. Search your town's police department using the search box.
+
+```{r}
+selectInput("state", "State:", choices = distinct(data1033, `State`))
+```
+
+This dashboard was created by [Gavin Rozzi](https://www.gavinrozzi.com/)
+
+Row
+-----------------------------------------------------------------------
+
+### Total shipments
+
+```{r}
+renderValueBox({
+  total_shipments <- nrow(data1033 %>% filter(State == input$state))
+  valueBox(total_shipments , 
+           icon = "fa-truck")
+})
+```
+
+### Value of equipment received
+
+```{r}
+renderValueBox({
+  state_equipment <- data1033 %>% filter(State == input$state)
+  state_value <- currency(sum(state_equipment$`Acquisition Value`))
+  valueBox(state_value , 
+           icon = "fa-money-bill-wave")
+})
+```
+
+
+### Agencies received equipment
+
+```{r}
+renderValueBox({
+  state_equipment <- data1033 %>% filter(State == input$state)
+  department_count <- nrow(distinct(state_equipment, `Station Name (LEA)`))
+  valueBox(department_count , 
+           icon = "fa-balance-scale")
+})
+```
+
+Row
+-----------------------------------------------------------------------
+
+### State Data
+```{r}
+DT::renderDataTable({
+  DT::datatable(data1033 %>% filter(State == input$state) %>% arrange(desc(`Ship Date`)) %>% select(-State, -`Station Type`), extensions = 'Responsive', escape = FALSE, rownames = FALSE,
+  options = list(
+    bPaginate = TRUE
+  ))
+})
+```
