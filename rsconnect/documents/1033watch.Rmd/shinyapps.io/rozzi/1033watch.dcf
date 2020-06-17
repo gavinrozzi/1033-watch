@@ -1,0 +1,12 @@
+name: 1033watch
+title: 1033watch
+username:
+account: rozzi
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2417145
+bundleId: 3235231
+url: https://rozzi.shinyapps.io/1033watch/
+when: 1591422810.74048
+asMultiple: FALSE
+asStatic: FALSE

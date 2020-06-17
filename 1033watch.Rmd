@@ -17,15 +17,19 @@ library(plotly)
 library(formattable)
 library(DT)
 
+
 # Read in 1033 program data
 data1033 <- read_csv('data/data.csv') %>% select(-X1)
 
 # Get state names
 state_data <- data.frame(state.name, state.abb)
 
+# Calculate which states received the most shipments
+state_summaries <- data1033 %>% group_by(State) %>% tally() %>% arrange(desc(n))
+
 ```
 
-Home
+National Stats
 =====================================
 
 About Your State {.sidebar}
@@ -33,14 +37,74 @@ About Your State {.sidebar}
 The [1033 program](https://www.dla.mil/DispositionServices/Offers/Reutilization/LawEnforcement/ProgramFAQs.aspx) is an initiative that allows the Department of Defense to provide excess military equipment to state & local law enforcement agencies.
 
 This dashboard is tracking how much each state has received under the program, and what type of equipment they received.
-  
+
+Created by [Gavin Rozzi](https://www.gavinrozzi.com/)
+
+Row
+-----------------------------------------------------------------------
+
+### Total shipments
+
+```{r}
+renderValueBox({
+  total_shipments <- nrow(data1033)
+  valueBox(total_shipments , 
+           icon = "fa-truck")
+})
+```
+
+### Value of equipment received
+
+```{r}
+renderValueBox({
+  total_value <- currency(sum(data1033$`Acquisition Value`))
+  valueBox(total_value , 
+           icon = "fa-money-bill-wave")
+})
+```
+
+
+### Agencies received equipment
+
+```{r}
+renderValueBox({
+  department_count <- nrow(distinct(data1033, `Station Name (LEA)`))
+  valueBox(department_count , 
+           icon = "fa-balance-scale")
+})
+```
+
+
+Row {data-width=650}
+-----------------------------------------------------------------------
+
+### National Shipments
+
+```{r}
+fig <- plot_geo(state_summaries, locationmode = 'USA-states') 
+fig <- fig %>% add_trace(
+  locations = ~State,
+  z = ~n,
+  colors='viridis')
+
+fig <- fig %>%  
+layout(geo = list(scope = 'usa'))
+fig <- fig %>% colorbar(title = "Number of items received")
+fig
+```
+
+Lookup Your State
+=====================================
+
+About Your State {.sidebar}
+-----------------------------------------------------------------------
+
 Select your state below. Search your town's police department using the search box.
 
 ```{r}
 selectInput("state", "State:", choices = distinct(data1033, `State`))
 ```
 
-This dashboard was created by [Gavin Rozzi](https://www.gavinrozzi.com/)
 
 Row
 -----------------------------------------------------------------------
