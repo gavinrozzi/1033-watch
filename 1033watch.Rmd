@@ -16,7 +16,9 @@ library(shiny)
 library(plotly)
 library(formattable)
 library(DT)
-
+library(lubridate)
+library(xts)
+library(dygraphs)
 
 # Read in 1033 program data
 data1033 <- read_csv('data/data.csv') %>% select(-X1)
@@ -26,6 +28,21 @@ state_data <- data.frame(state.name, state.abb)
 
 # Calculate which states received the most shipments
 state_summaries <- data1033 %>% group_by(State) %>% tally() %>% arrange(desc(n))
+
+# Get top shipped items
+top_items <- data1033 %>% group_by(`Item Name`) %>% tally() %>% arrange(desc(n))
+
+# Parse shipping dates
+data1033$`Ship Date` <- as.Date(data1033$`Ship Date`)
+
+# Count shipments by day
+
+count_by_date <- data1033 %>% group_by(`Ship Date`) %>% tally()
+
+# Create time series object
+
+count_ts <- as.xts(ts(start = min(count_by_date$`Ship Date`), end = max(count_by_date$`Ship Date`), data = count_by_date$n))
+
 
 ```
 
@@ -47,7 +64,7 @@ Row
 
 ```{r}
 renderValueBox({
-  total_shipments <- nrow(data1033)
+  total_shipments <- prettyNum(nrow(data1033),big.mark=",")
   valueBox(total_shipments , 
            icon = "fa-truck")
 })
@@ -68,12 +85,11 @@ renderValueBox({
 
 ```{r}
 renderValueBox({
-  department_count <- nrow(distinct(data1033, `Station Name (LEA)`))
+  department_count <- prettyNum(nrow(distinct(data1033, `Station Name (LEA)`)),big.mark=",")
   valueBox(department_count , 
            icon = "fa-balance-scale")
 })
 ```
-
 
 Row {data-width=650}
 -----------------------------------------------------------------------
@@ -89,9 +105,36 @@ fig <- fig %>% add_trace(
 
 fig <- fig %>%  
 layout(geo = list(scope = 'usa'))
-fig <- fig %>% colorbar(title = "Number of items received")
+fig <- fig %>% colorbar(title = "Total shipments received")
 fig
 ```
+
+Row {data-width=450}
+-----------------------------------------------------------------------
+
+### Top Items Received By States
+
+```{r}
+top5 <- top_items %>% top_n(5)
+
+top5$`Item Name` <- factor(top5$`Item Name`, levels = top5$`Item Name`)
+fig <- plot_ly(
+  x = top5$`Item Name`,
+  y = top5$n,
+  type = "bar"
+)
+fig
+
+```
+
+### Shipments By Date
+
+```{r}
+
+renderDygraph(dygraph(count_ts)%>% 
+  dyRangeSelector())
+```
+
 
 Lookup Your State
 =====================================
