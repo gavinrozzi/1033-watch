@@ -19,6 +19,7 @@ library(DT)
 library(lubridate)
 library(xts)
 library(dygraphs)
+library(nivocal)
 
 # Read in 1033 program data
 data1033 <- read_csv('data/data.csv') %>% select(-X1)
@@ -39,10 +40,26 @@ data1033$`Ship Date` <- as.Date(data1033$`Ship Date`)
 
 count_by_date <- data1033 %>% group_by(`Ship Date`) %>% tally()
 
-# Create time series object
-
+# Create time series object for dygraph
 count_ts <- as.xts(ts(start = min(count_by_date$`Ship Date`), end = max(count_by_date$`Ship Date`), data = count_by_date$n))
 
+# Create dataframe for calendar heatmap from xts (count_ts)
+cal_data <- data.frame(count_ts)
+cal_data <- data.frame(date=index(count_ts), coredata(count_ts)) %>% rename(value = "coredata.count_ts.") %>% rename(day = date)
+
+
+# Calculate number of years dataset covers
+now <- as.integer(format(Sys.Date(), "%Y"))
+timedelta <- as.Date(paste0(now,'-01-01')) - as.Date(cal_data$day[1])
+
+# Create years for filtering data
+years <- data.frame(
+  day = seq.Date(
+    from = as.Date(cal_data$day[1]),
+    length.out = time_length(timedelta,'years'),
+    by = "years"
+  )
+)
 
 ```
 
@@ -133,6 +150,32 @@ fig
 
 renderDygraph(dygraph(count_ts)%>% 
   dyRangeSelector())
+```
+
+Shipments By Month
+=====================================
+
+Shipments By Month {.sidebar}
+-----------------------------------------------------------------------
+This page shows 1033 program shipments to states from 2015-2020.
+
+Each square represents one day of shipments, and they are colored based upon volume. 
+
+Hover over a square to find out how many shipments occured on that date.
+
+Row
+-----------------------------------------------------------------------
+
+### 1033 Program Shipments From 2015-2020
+
+```{r}
+# Filter data only for the last 5 years
+now <- as.integer(format(Sys.Date(), "%Y"))
+fiveyearsago <- paste0(now - 5,'-01-01')
+
+calendarmap <- nivocal(cal_data %>% filter(day > fiveyearsago),colors = RColorBrewer::brewer.pal(n=9, "Set2"))
+renderNivocal(calendarmap)
+
 ```
 
 
