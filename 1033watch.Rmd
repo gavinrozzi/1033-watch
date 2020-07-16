@@ -61,6 +61,11 @@ years <- data.frame(
   )
 )
 
+# Get 5 latest shipments
+latest <- data1033 %>% select(State, `Station Name (LEA)`, `Item Name`, `Ship Date`) %>% arrange(desc(`Ship Date`))
+
+latest <- latest[1:5,]
+
 ```
 
 National Stats
@@ -151,6 +156,15 @@ fig
 renderDygraph(dygraph(count_ts)%>% 
   dyRangeSelector())
 ```
+
+### Latest State Acquisitions
+
+```{r}
+renderUI(
+apply(latest, 1, function(x) tags$li(tags$strong(x['Station Name (LEA)']), "received", x['Item Name'], 'on', x['Ship Date']))
+)
+```
+
 
 Shipments By Month
 =====================================
