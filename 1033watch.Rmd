@@ -165,46 +165,44 @@ apply(latest, 1, function(x) tags$li(tags$strong(x['Station Name (LEA)']), "rece
 )
 ```
 
-
-Shipments By Month
-=====================================
-
-Shipments By Month {.sidebar}
------------------------------------------------------------------------
-This page shows 1033 program shipments to states from 2015-2020.
-
-Each square represents one day of shipments, and they are colored based upon volume. 
-
-Hover over a square to find out how many shipments occured on that date.
-
-Row
------------------------------------------------------------------------
-
-### 1033 Program Shipments From 2015-2020
-
-```{r}
-# Filter data only for the last 5 years
-now <- as.integer(format(Sys.Date(), "%Y"))
-fiveyearsago <- paste0(now - 5,'-01-01')
-
-calendarmap <- nivocal(cal_data %>% filter(day > fiveyearsago),colors = RColorBrewer::brewer.pal(n=9, "Set2"))
-renderNivocal(calendarmap)
-
-```
-
-
 Lookup Your State
 =====================================
 
 About Your State {.sidebar}
 -----------------------------------------------------------------------
 
-Select your state below. Search your town's police department using the search box.
+Select your state below. Search your town or county police department using the search box.
 
 ```{r}
 selectInput("state", "State:", choices = distinct(data1033, `State`))
 ```
 
+
+```{r}
+renderUI({state_name <- state_data %>% filter(state.abb == input$state) %>% .$state.name
+state_equipment <- data1033 %>% filter(State == input$state)
+top_agency <- state_equipment %>% group_by(`Station Name (LEA)`) %>% tally() %>% arrange(desc(n)) %>% top_n(1)
+tags$h2(paste(state_name, 'at a glance')
+)})
+renderUI({state_equipment <- data1033 %>% filter(State == input$state)
+top_agency <- state_equipment %>% group_by(`Station Name (LEA)`) %>% tally() %>% arrange(desc(n)) %>% top_n(1)
+tags$p(paste('The most militarized agency was', top_agency$`Station Name (LEA)`,'which received',top_agency$n, 'shipments.'))})
+```
+
+#### Racial impacts of police militarization
+
+The value for estimated reduction in black charitable giving was computed using estimates from an economic study by [Insler et al. (2019)](https://doi.org/10.1016/j.jebo.2019.04.012) that found:
+
+"Black households reduce charitable giving, **with each additional million dollars of military equipment transferred to local police resulting in a 7.4% decline in overall charitable giving** for black households"
+
+```{r}
+
+renderUI({
+state_equipment <- data1033 %>% filter(State == input$state)
+percent <- paste0(round(sum(state_equipment$`Acquisition Value`) / 1000000 * 7.4,digits=2),'%')
+tags$p(paste(as.character(state_data %>% filter(state.abb == input$state) %>% .$state.name),'received', paste(currency(round(sum(state_equipment$`Acquisition Value`) / 1000000, digits = 2)),'million dollars worth of military equipment'),'since',year(min(state_equipment$`Ship Date`))),'resulting in a', percent,'decrease in charitable giving among black families.')})
+
+```
 
 Row
 -----------------------------------------------------------------------
@@ -242,6 +240,19 @@ renderValueBox({
 })
 ```
 
+### Estimated reduction in black charitable giving from police militarization
+
+```{r}
+renderValueBox({
+  state_equipment <- data1033 %>% filter(State == input$state)
+  state_value <- round(sum(state_equipment$`Acquisition Value`) / 1000000 * 7.4,digits=2)
+  valueBox(paste0(state_value,'%'), 
+           icon = "fa-hand-holding-usd",
+           color = ifelse(state_value > 50, "danger", "primary"))
+})
+```
+
+
 Row
 -----------------------------------------------------------------------
 
@@ -252,4 +263,30 @@ DT::renderDataTable({
     bPaginate = TRUE
   ))
 })
+```
+
+Shipments By Month
+=====================================
+
+Shipments By Month {.sidebar}
+-----------------------------------------------------------------------
+This page shows 1033 program shipments to states from 2015-2020.
+
+Each square represents one day of shipments, and they are colored based upon volume. 
+
+Hover over a square to find out how many shipments occured on that date.
+
+Row
+-----------------------------------------------------------------------
+
+### 1033 Program Shipments From 2015-2020
+
+```{r}
+# Filter data only for the last 5 years
+now <- as.integer(format(Sys.Date(), "%Y"))
+fiveyearsago <- paste0(now - 5,'-01-01')
+
+calendarmap <- nivocal(cal_data %>% filter(day > fiveyearsago),colors = RColorBrewer::brewer.pal(n=9, "Set2"))
+renderNivocal(calendarmap)
+
 ```
