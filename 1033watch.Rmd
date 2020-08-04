@@ -252,6 +252,41 @@ renderValueBox({
 })
 ```
 
+Row
+-----------------------------------------------------------------------
+
+### Top Items In This State
+```{r}
+renderPlotly({state_equipment <- data1033 %>% filter(State == input$state)
+top5 <- state_equipment %>% group_by(`Item Name`) %>% tally() %>% arrange(desc(n)) %>% top_n(5)
+
+
+top5$`Item Name` <- factor(top5$`Item Name`, levels = top5$`Item Name`)
+fig <- plot_ly(
+  x = top5$`Item Name`,
+  y = top5$n,
+  type = "bar"
+)
+
+
+  fig
+  })
+
+```
+
+### State Shipments By Date
+
+```{r}
+# Count shipments by day
+renderDygraph({
+state_equipment <- data1033 %>% filter(State == input$state)
+state_count_by_date <- state_equipment %>% group_by(`Ship Date`) %>% tally()
+
+# Create time series object for dygraph
+state_count_ts <- as.xts(ts(start = min(state_count_by_date$`Ship Date`), end = max(state_count_by_date$`Ship Date`), data = state_count_by_date$n))
+dygraph(state_count_ts)%>% 
+  dyRangeSelector(dateWindow = c(Sys.Date() - 1825, Sys.Date()))})
+```
 
 Row
 -----------------------------------------------------------------------
