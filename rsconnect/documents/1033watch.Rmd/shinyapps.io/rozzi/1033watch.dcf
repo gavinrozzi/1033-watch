@@ -5,8 +5,8 @@ account: rozzi
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2417145
-bundleId: 3470636
+bundleId: 3471624
 url: https://rozzi.shinyapps.io/1033watch/
-when: 1596485829.52834
+when: 1596507203.80767
 asMultiple: FALSE
 asStatic: FALSE
