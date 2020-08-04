@@ -7,7 +7,7 @@ library(readxl)
 sheets <- excel_sheets('data/DISP_AllStatesAndTerritories_06302020.xlsx')
 
 # Read in all sheets to a list
-list <- lapply(sheets, function(x) read_excel('data/DISP_AllStatesAndTerritories_03312020.xlsx', sheet = x))
+list <- lapply(sheets, function(x) read_excel('data/DISP_AllStatesAndTerritories_06302020.xlsx', sheet = x))
 
 # Convert to a single dataframe
 df <- rbind.fill(list)
