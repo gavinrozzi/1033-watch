@@ -22,7 +22,7 @@ library(dygraphs)
 library(nivocal)
 
 # Read in 1033 program data
-data1033 <- read_csv('data/data.csv') %>% select(-X1)
+data1033 <- read_csv('data/data.csv')
 
 # Get state names
 state_data <- data.frame(state.name, state.abb)
